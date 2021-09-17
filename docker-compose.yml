@@ -1,0 +1,58 @@
+version: "3"
+services:
+  influxdb:
+    container_name: influxdb
+    restart: always
+    image: influxdb:latest
+    ports:
+      - "8086:8086"
+    volumes:
+      - influxdb-storage:/var/lib/influxdb2
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=${INFLUX_USER}
+      - DOCKER_INFLUXDB_INIT_PASSWORD=${INFLUX_PASS}
+      - DOCKER_INFLUXDB_INIT_ORG=${INFLUX_ORG}
+      - DOCKER_INFLUXDB_INIT_BUCKET=${INFLUX_BUCKET}
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=${INFLUX_TOKEN}
+    networks:
+      - net
+
+  receiver:
+    container_name: receiver
+    restart: always
+    depends_on:
+      - influxdb
+    image: receiver
+    links:
+      - influxdb
+    ports:
+      - "1883:1883"
+    environment:
+      - INFLUX_TOKEN=${INFLUX_TOKEN}
+      - INFLUX_BUCKET=${INFLUX_BUCKET}
+      - INFLUX_URL=${INFLUX_URL}
+      - INFLUX_ORG=${INFLUX_ORG}
+    networks:
+      - net
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    restart: always
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+    depends_on:
+      - influxdb
+    networks:
+      - net
+
+volumes:
+  influxdb-storage:
+  grafana-data:
+
+networks:
+  net:
+    driver: bridge

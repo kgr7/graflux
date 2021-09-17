@@ -1,5 +1,19 @@
 version: "3"
 services:
+  mosquitto:
+    container_name: mosquitto
+    restart: always
+    image: eclipse-mosquitto:latest
+    volumes:
+      - ./mosquitto.conf:/mosquitto/config/mosquitto.conf
+      - ./ca.crt:/etc/mosquitto/ca_certificates/ca.crt
+      - ./server.crt:/etc/mosquitto/certs/server.crt
+      - ./server.key:/etc/mosquitto/certs/server.key
+    ports:
+      - "1883:1883"
+    networks:
+      - net
+
   influxdb:
     container_name: influxdb
     restart: always
@@ -26,13 +40,13 @@ services:
     image: receiver
     links:
       - influxdb
-    ports:
-      - "1883:1883"
     environment:
       - INFLUX_TOKEN=${INFLUX_TOKEN}
       - INFLUX_BUCKET=${INFLUX_BUCKET}
       - INFLUX_URL=${INFLUX_URL}
       - INFLUX_ORG=${INFLUX_ORG}
+    volumes:
+      - ./ca.crt:/app/ca.crt
     networks:
       - net
 

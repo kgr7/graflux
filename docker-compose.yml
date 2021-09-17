@@ -6,9 +6,9 @@ services:
     image: eclipse-mosquitto:latest
     volumes:
       - ./mosquitto.conf:/mosquitto/config/mosquitto.conf
-      - ./ca.crt:/etc/mosquitto/ca_certificates/ca.crt
-      - ./server.crt:/etc/mosquitto/certs/server.crt
-      - ./server.key:/etc/mosquitto/certs/server.key
+      # - ./ca.crt:/etc/mosquitto/ca_certificates/ca.crt
+      # - ./server.crt:/etc/mosquitto/certs/server.crt
+      # - ./server.key:/etc/mosquitto/certs/server.key
     ports:
       - "1883:1883"
     networks:
@@ -17,18 +17,14 @@ services:
   influxdb:
     container_name: influxdb
     restart: always
-    image: influxdb:latest
+    image: arm32v7/influxdb
     ports:
       - "8086:8086"
     volumes:
-      - influxdb-storage:/var/lib/influxdb2
+      - influxdb-storage:/var/lib/influxdb/data
     environment:
-      - DOCKER_INFLUXDB_INIT_MODE=setup
-      - DOCKER_INFLUXDB_INIT_USERNAME=${INFLUX_USER}
-      - DOCKER_INFLUXDB_INIT_PASSWORD=${INFLUX_PASS}
-      - DOCKER_INFLUXDB_INIT_ORG=${INFLUX_ORG}
-      - DOCKER_INFLUXDB_INIT_BUCKET=${INFLUX_BUCKET}
-      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=${INFLUX_TOKEN}
+      - INFLUXDB_ADMIN_USER=${INFLUX_USER}
+      - INFLUXDB_ADMIN_PASSWPRD=${INFLUX_PASS}
     networks:
       - net
 
@@ -45,6 +41,8 @@ services:
       - INFLUX_BUCKET=${INFLUX_BUCKET}
       - INFLUX_URL=${INFLUX_URL}
       - INFLUX_ORG=${INFLUX_ORG}
+      - INFLUX_USER=${INFLUX_USER}
+      - INFLUX_PASS=${INFLUX_PASS}
     volumes:
       - ./ca.crt:/app/ca.crt
     networks:

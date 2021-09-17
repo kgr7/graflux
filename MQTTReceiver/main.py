@@ -1,19 +1,32 @@
 import os
 import time
 import random
-from influxdb_client import InfluxDBClient, Point, BucketsApi
-from influxdb_client.client.write_api import SYNCHRONOUS
+from datetime import datetime
+from influxdb import InfluxDBClient
 
-bucket = os.environ["INFLUX_BUCKET"]
-token = os.environ["INFLUX_TOKEN"]
-url = os.environ["INFLUX_URL"]
-org = os.environ["INFLUX_ORG"]
+user = os.environ["INFLUX_USER"]
+password = os.environ["INFLUX_PASS"]
 
-client = InfluxDBClient(url="http://influxdb:8086", token=token, org=org)
+client = InfluxDBClient('influxdb', 8086, user, password, 'example')
+client.create_database('example')
 
-write_api = client.write_api(write_options=SYNCHRONOUS)
+while True:    
+    json_body = [
+        {
+            "measurement": "cpu_load_short",
+            "tags": {
+                "host": "server_01",
+                "region": "us_west"
+            },
+            "time": datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "fields": {
+                "value": random.uniform(0, 1)
+            }
+        }
+    ]
 
-for i in range(10000):
-  p = Point("random_measurement").tag("data", "Value").field("value", random.uniform(16, 24))
-  write_api.write(bucket=bucket, record=p)
-  time.sleep(0.1)
+    client.write_points(json_body)
+    result = client.query('select value from cpu_load_short;')
+    print("Result: {0}".format(result))
+    time.sleep(1)
+
